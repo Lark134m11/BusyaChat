@@ -26,13 +26,13 @@ export class AuthService {
   }
 
   private accessSecret(): string {
-    const s = this.config.get<string>('JWT_ACCESS_SECRET');
+    const s = this.config.get<string>('JWT_ACCESS_SECRET') ?? this.config.get<string>('JWT_SECRET');
     if (!s) throw new Error('JWT_ACCESS_SECRET missing');
     return s;
   }
 
   private refreshSecret(): string {
-    const s = this.config.get<string>('JWT_REFRESH_SECRET');
+    const s = this.config.get<string>('JWT_REFRESH_SECRET') ?? this.config.get<string>('JWT_SECRET');
     if (!s) throw new Error('JWT_REFRESH_SECRET missing');
     return s;
   }
