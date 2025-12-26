@@ -2,10 +2,11 @@
   "name": "@busyachat/desktop",
   "private": true,
   "version": "0.1.0",
-  "main": "electron/main.ts",
+  "main": "electron/main.cjs",
   "scripts": {
-    "dev": "concurrently -n VITE,ELECTRON -c auto \"vite\" \"wait-on http://localhost:5173 && tsx electron/main.ts\"",
-    "build": "vite build"
+    "dev": "concurrently -n VITE,ELECTRON -c auto \"vite\" \"wait-on http://localhost:5173 && electron electron/main.cjs\"",
+    "build": "vite build",
+    "dist": "vite build && electron-builder"
   },
   "dependencies": {
     "react": "^18.3.1",
@@ -20,11 +21,32 @@
     "autoprefixer": "^10.4.20",
     "concurrently": "^9.0.1",
     "electron": "^31.6.0",
+    "electron-builder": "^24.13.3",
     "postcss": "^8.4.47",
     "tailwindcss": "^3.4.13",
-    "tsx": "^4.21.0",
     "typescript": "^5.6.2",
     "vite": "^5.4.8",
     "wait-on": "^7.2.0"
+  },
+  "build": {
+    "appId": "com.busya.chat",
+    "productName": "BusyaChat",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**",
+      "electron/**"
+    ],
+    "asar": true,
+    "win": {
+      "target": [
+        "nsis"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
   }
 }
