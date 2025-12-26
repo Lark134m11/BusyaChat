@@ -2,9 +2,9 @@
   "name": "@busyachat/desktop",
   "private": true,
   "version": "0.1.0",
-  "main": "electron/main.cjs",
+  "main": "electron/main.ts",
   "scripts": {
-    "dev": "concurrently -n VITE,ELECTRON -c auto \"vite\" \"wait-on http://localhost:5173 && electron electron/main.cjs\"",
+    "dev": "concurrently -n VITE,ELECTRON -c auto \"vite\" \"wait-on http://localhost:5173 && tsx electron/main.ts\"",
     "build": "vite build"
   },
   "dependencies": {
