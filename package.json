@@ -2,10 +2,10 @@
   "name": "@busyachat/desktop",
   "private": true,
   "version": "0.1.0",
-  "main": "electron/main.cjs",
+  "main": "apps/desktop/electron/main.cjs",
   "scripts": {
-    "dev": "concurrently -n VITE,ELECTRON -c auto \"vite\" \"wait-on http://127.0.0.1:5173 && electron electron/main.cjs\"",
-    "build": "vite build"
+    "dev": "concurrently -n VITE,ELECTRON -c auto \"vite --config apps/desktop/vite.config.mts --root apps/desktop\" \"wait-on http://127.0.0.1:5173 && electron apps/desktop/electron/main.cjs\"",
+    "build": "vite build --config apps/desktop/vite.config.mts --root apps/desktop"
   },
   "dependencies": {
     "react": "^18.3.1",
