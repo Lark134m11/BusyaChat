@@ -45,6 +45,10 @@ model User {
   uploads         Attachment[]
   ownedServers    Server[]     @relation("ServerOwner")
   bansCreated     ServerBan[]  @relation("BanCreatedBy")
+  serverBans      ServerBan[]  @relation("BanUser")
+  invitesCreated  Invite[]
+  channelReadStates ChannelReadState[]
+  directReadStates  DirectReadState[]
 }
 
 model RefreshToken {
@@ -100,7 +104,7 @@ model ServerBan {
   expiresAt   DateTime?
 
   server    Server @relation(fields: [serverId], references: [id], onDelete: Cascade)
-  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User   @relation("BanUser", fields: [userId], references: [id], onDelete: Cascade)
   createdBy User   @relation("BanCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
 
   @@unique([serverId, userId])
