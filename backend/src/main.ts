@@ -13,11 +13,16 @@ async function bootstrap() {
 
   const config = app.get(ConfigService);
   const port = Number(config.get<string>('PORT') ?? '4000');
-  const corsOrigin = config.get<string>('CLIENT_URL') ?? 'http://127.0.0.1:5173';
+  const corsOriginRaw =
+    config.get<string>('CLIENT_URL') ?? 'http://127.0.0.1:5173,http://localhost:5173';
+  const corsOrigins = corsOriginRaw
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
 
   app.use(cookieParser());
   app.enableCors({
-    origin: corsOrigin,
+    origin: corsOrigins,
     credentials: true,
   });
 

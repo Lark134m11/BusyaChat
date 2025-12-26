@@ -1,10 +1,13 @@
 import React from 'react';
 import { useAuth } from '../state/auth';
 import { useChat } from '../state/chat';
+import { useLocale } from '../state/locale';
+import { t } from '../i18n';
 
 export function Servers() {
   const auth = useAuth();
   const chat = useChat();
+  const locale = useLocale((s) => s.locale);
 
   return (
     <div className="border-r border-white/10 flex flex-col items-center py-3 gap-3">
@@ -20,7 +23,7 @@ export function Servers() {
           chat.showDirects();
           chat.loadDirectThreads(auth.accessToken);
         }}
-        title="Direct messages"
+        title={t(locale, 'servers.dmTitle')}
       >
         DM
       </button>

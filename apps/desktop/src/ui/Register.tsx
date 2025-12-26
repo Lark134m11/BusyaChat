@@ -1,9 +1,13 @@
 import React, { useState } from 'react';
 import { useAuth } from '../state/auth';
+import { useLocale } from '../state/locale';
+import { t } from '../i18n';
 import { BusyaBadge, BusyaButton, BusyaInput } from './Cute';
+import { LanguageSwitch } from './LanguageSwitch';
 
 export function Register({ onSwitch }: { onSwitch: () => void }) {
   const auth = useAuth();
+  const locale = useLocale((s) => s.locale);
   const [username, setUsername] = useState('Busya');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -12,17 +16,24 @@ export function Register({ onSwitch }: { onSwitch: () => void }) {
     <div className="h-full flex items-center justify-center p-8">
       <div className="w-full max-w-md rounded-busya bg-busya-card/60 p-6 shadow-busya ring-1 ring-white/10">
         <div className="flex items-center justify-between mb-4">
-          <div className="text-xl font-extrabold text-white">BusyaChat</div>
-          <BusyaBadge text="register softly" />
+          <div className="text-xl font-extrabold text-white">{t(locale, 'app.name')}</div>
+          <div className="flex items-center gap-2">
+            <BusyaBadge text={t(locale, 'badge.register')} />
+            <LanguageSwitch />
+          </div>
         </div>
 
         <div className="space-y-3">
-          <BusyaInput value={username} onChange={(e) => setUsername(e.target.value)} placeholder="username" />
-          <BusyaInput value={email} onChange={(e) => setEmail(e.target.value)} placeholder="email" />
+          <BusyaInput
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            placeholder={t(locale, 'auth.username')}
+          />
+          <BusyaInput value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t(locale, 'auth.email')} />
           <BusyaInput
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="password (8+)"
+            placeholder={t(locale, 'auth.passwordHint')}
             type="password"
           />
 
@@ -33,11 +44,11 @@ export function Register({ onSwitch }: { onSwitch: () => void }) {
             onClick={() => auth.register(email, password, username)}
             className="w-full"
           >
-            {auth.loading ? 'creating account...' : 'Create account'}
+            {auth.loading ? t(locale, 'auth.creating') : t(locale, 'auth.create')}
           </BusyaButton>
 
           <button className="text-sm text-white/60 hover:text-white" onClick={onSwitch}>
-            Have an account? Sign in
+            {t(locale, 'auth.switchToLogin')}
           </button>
         </div>
       </div>

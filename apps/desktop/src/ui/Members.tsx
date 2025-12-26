@@ -1,10 +1,13 @@
 import React, { useMemo } from 'react';
 import { useChat } from '../state/chat';
+import { useLocale } from '../state/locale';
+import { t } from '../i18n';
 
 const ROLE_ORDER = ['OWNER', 'ADMIN', 'MOD', 'MEMBER'];
 
 export function Members() {
   const chat = useChat();
+  const locale = useLocale((s) => s.locale);
 
   const grouped = useMemo(() => {
     const groups: Record<string, any[]> = {};
@@ -20,15 +23,15 @@ export function Members() {
   if (chat.view !== 'server') {
     return (
       <div className="border-l border-white/10 p-3 text-sm text-white/60">
-        <div className="font-bold mb-2">Direct info</div>
-        <div className="text-white/50">Pick a DM to see participants.</div>
+        <div className="font-bold mb-2">{t(locale, 'members.directInfoTitle')}</div>
+        <div className="text-white/50">{t(locale, 'members.directInfoEmpty')}</div>
       </div>
     );
   }
 
   return (
     <div className="border-l border-white/10 p-3 overflow-auto busya-scroll">
-      <div className="font-bold mb-3">Members</div>
+      <div className="font-bold mb-3">{t(locale, 'members.title')}</div>
       {ROLE_ORDER.map((role) => {
         const list = grouped[role] || [];
         if (!list.length) return null;

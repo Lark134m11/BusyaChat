@@ -1,16 +1,20 @@
 import React, { useMemo, useState } from 'react';
 import { useAuth } from '../state/auth';
 import { useChat } from '../state/chat';
+import { useLocale } from '../state/locale';
+import { t } from '../i18n';
 import { Servers } from './Servers';
 import { Channels } from './Channels';
 import { Chat } from './Chat';
 import { Members } from './Members';
 import { ServerSettings } from './ServerSettings';
 import { BusyaBadge, BusyaButton, BusyaInput } from './Cute';
+import { LanguageSwitch } from './LanguageSwitch';
 
 export function Layout() {
   const auth = useAuth();
   const chat = useChat();
+  const locale = useLocale((s) => s.locale);
   const [serverName, setServerName] = useState('');
   const [inviteCode, setInviteCode] = useState('');
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -34,16 +38,19 @@ export function Layout() {
           <div className="p-3 border-b border-white/10 flex items-center justify-between">
             <div className="font-bold">{title}</div>
             {chat.view === 'server' ? (
-              <button
-                className="text-xs text-white/60 hover:text-white"
-                onClick={() => setSettingsOpen(true)}
-                disabled={!canOpenSettings}
-                title="Server settings"
-              >
-                settings
-              </button>
+              <div className="flex items-center gap-2">
+                <LanguageSwitch />
+                <button
+                  className="text-xs text-white/60 hover:text-white"
+                  onClick={() => setSettingsOpen(true)}
+                  disabled={!canOpenSettings}
+                  title={t(locale, 'settings.title')}
+                >
+                  {t(locale, 'layout.settings')}
+                </button>
+              </div>
             ) : (
-              <BusyaBadge text="soft mode" />
+              <BusyaBadge text={t(locale, 'layout.softMode')} />
             )}
           </div>
 
@@ -51,7 +58,7 @@ export function Layout() {
             <BusyaInput
               value={serverName}
               onChange={(e) => setServerName(e.target.value)}
-              placeholder="Create new server"
+              placeholder={t(locale, 'layout.createServerPlaceholder')}
             />
             <BusyaButton
               cute
@@ -63,14 +70,14 @@ export function Layout() {
               }}
               className="w-full"
             >
-              Create server
+              {t(locale, 'layout.createServer')}
             </BusyaButton>
 
             <div className="grid grid-cols-[1fr_80px] gap-2">
               <BusyaInput
                 value={inviteCode}
                 onChange={(e) => setInviteCode(e.target.value)}
-                placeholder="Invite code"
+                placeholder={t(locale, 'layout.inviteCode')}
               />
               <BusyaButton
                 onClick={async () => {
@@ -80,7 +87,7 @@ export function Layout() {
                   await chat.loadServers(auth.accessToken);
                 }}
               >
-                Join
+                {t(locale, 'layout.join')}
               </BusyaButton>
             </div>
           </div>
@@ -96,7 +103,7 @@ export function Layout() {
           className="absolute bottom-3 left-3 rounded-full bg-busya-card/70 px-3 py-2 text-xs text-white/70 hover:text-white ring-1 ring-white/10"
           title="Logout"
         >
-          logout
+          {t(locale, 'layout.logout')}
         </button>
       </div>
 

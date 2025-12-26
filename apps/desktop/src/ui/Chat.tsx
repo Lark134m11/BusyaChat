@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '../state/auth';
 import { useChat } from '../state/chat';
+import { useLocale } from '../state/locale';
+import { t } from '../i18n';
 
 type PendingAttachment = {
   id: string;
@@ -10,6 +12,7 @@ type PendingAttachment = {
 export function Chat() {
   const auth = useAuth();
   const chat = useChat();
+  const locale = useLocale((s) => s.locale);
   const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:4000';
   const [text, setText] = useState('');
   const [search, setSearch] = useState('');
@@ -32,10 +35,10 @@ export function Chat() {
       .filter((m) => chat.typingUserIds.includes(m.user?.id))
       .map((m) => m.user?.username)
       .filter(Boolean) as string[];
-    if (names.length === 1) return `${names[0]} is typing...`;
-    if (names.length > 1) return 'Multiple people are typing...';
-    return 'Someone is typing...';
-  }, [chat.typingUserIds, chat.members]);
+    if (names.length === 1) return t(locale, 'chat.isTyping', { name: names[0] });
+    if (names.length > 1) return t(locale, 'chat.multipleTyping');
+    return t(locale, 'chat.someoneTyping');
+  }, [chat.typingUserIds, chat.members, locale]);
 
   useEffect(() => {
     if (!autoScroll) return;
@@ -125,15 +128,15 @@ export function Chat() {
       <div className="border-b border-white/10 p-3 flex items-center justify-between gap-2">
         <div className="font-bold">
           {isDirect
-            ? 'Direct'
+            ? t(locale, 'chat.directTitle')
             : activeChannel
               ? `${activeChannel.type === 'VOICE' ? 'V' : '#'} ${activeChannel.name}`
-              : 'Pick a channel'}
+              : t(locale, 'chat.pickChannelTitle')}
         </div>
         <div className="flex-1 max-w-[420px] flex gap-2">
           <input
             className="w-full rounded-busya bg-busya-card/70 px-3 py-2 text-xs outline-none ring-1 ring-white/10 focus:ring-busya-pink/60"
-            placeholder="Search in messages"
+            placeholder={t(locale, 'chat.searchPlaceholder')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             onKeyDown={(e) => {
@@ -144,7 +147,7 @@ export function Chat() {
             className="rounded-busya px-3 py-2 bg-busya-card/80 text-xs ring-1 ring-white/10 hover:bg-white/10"
             onClick={runSearch}
           >
-            Find
+            {t(locale, 'chat.find')}
           </button>
         </div>
         {!isDirect && activeChannel?.type === 'VOICE' && (
@@ -152,14 +155,18 @@ export function Chat() {
             className="rounded-busya px-3 py-2 bg-busya-pink text-busya-night text-xs font-bold"
             onClick={() => (voiceActive ? chat.leaveVoice() : chat.joinVoice(activeChannel.id))}
           >
-            {voiceActive ? 'Leave voice' : 'Join voice'}
+            {voiceActive ? t(locale, 'chat.leaveVoice') : t(locale, 'chat.joinVoice')}
           </button>
         )}
       </div>
 
       {search && (
         <div className="border-b border-white/10 p-2 text-xs text-white/60 space-y-1">
-          <div>Results: {isDirect ? chat.directSearchResults.length : chat.searchResults.length}</div>
+          <div>
+            {t(locale, 'chat.results', {
+              count: isDirect ? chat.directSearchResults.length : chat.searchResults.length,
+            })}
+          </div>
           <div className="grid gap-1">
             {(isDirect ? chat.directSearchResults : chat.searchResults).slice(0, 5).map((m) => (
               <div key={m.id} className="rounded-busya bg-busya-card/60 px-2 py-1">
@@ -190,13 +197,13 @@ export function Chat() {
         onScroll={handleScroll}
       >
         {isDirect && !chat.activeDirectId && (
-          <div className="text-white/60">Pick a direct thread to start chatting.</div>
+          <div className="text-white/60">{t(locale, 'chat.pickDirect')}</div>
         )}
         {!isDirect && !chat.activeChannelId && (
-          <div className="text-white/60">Pick a channel to start chatting.</div>
+          <div className="text-white/60">{t(locale, 'chat.pickChannel')}</div>
         )}
         {!!(isDirect ? chat.activeDirectId : chat.activeChannelId) && !messages.length && (
-          <div className="text-white/60">No messages yet.</div>
+          <div className="text-white/60">{t(locale, 'chat.noMessages')}</div>
         )}
 
         {messages.map((m) => (
@@ -258,7 +265,7 @@ export function Chat() {
               <div className="flex items-center gap-2 text-[11px] text-white/50">
                 <button
                   onClick={() => {
-                    const emoji = prompt('Reaction emoji (like ":)" or "<3")');
+                    const emoji = prompt(t(locale, 'chat.reactionPrompt'));
                     if (!emoji || !auth.accessToken) return;
                     if (isDirect) chat.addDirectReaction(auth.accessToken, m.id, emoji);
                     else chat.addReaction(auth.accessToken, m.id, emoji);
@@ -270,7 +277,7 @@ export function Chat() {
                   <>
                     <button
                       onClick={() => {
-                        const next = prompt('Edit message', m.content);
+                        const next = prompt(t(locale, 'chat.editPrompt'), m.content);
                         if (!next || !auth.accessToken) return;
                         if (isDirect) chat.editDirect(auth.accessToken, m.id, next);
                         else chat.editMessage(auth.accessToken, m.id, next);
@@ -309,7 +316,7 @@ export function Chat() {
         <div className="flex gap-2">
           <input
             className="flex-1 rounded-busya bg-busya-card/70 px-4 py-3 text-sm outline-none ring-1 ring-white/10 focus:ring-busya-pink/60"
-            placeholder="Write a message"
+            placeholder={t(locale, 'chat.writeMessage')}
             value={text}
             disabled={!canSend}
             onChange={(e) => {
@@ -326,7 +333,7 @@ export function Chat() {
             }}
           />
           <label className="rounded-busya px-3 py-3 bg-busya-card/70 text-xs ring-1 ring-white/10 cursor-pointer">
-            file
+            {t(locale, 'chat.file')}
             <input type="file" multiple hidden disabled={!canSend} onChange={(e) => handleUpload(e.target.files)} />
           </label>
           <button
@@ -334,10 +341,10 @@ export function Chat() {
             onClick={handleSend}
             disabled={!canSend}
           >
-            Send
+            {t(locale, 'chat.send')}
           </button>
         </div>
-        <div className="text-xs text-white/40">Enter to send, Shift+Enter for newline.</div>
+        <div className="text-xs text-white/40">{t(locale, 'chat.enterHint')}</div>
       </div>
     </div>
   );
