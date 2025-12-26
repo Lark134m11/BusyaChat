@@ -5,12 +5,12 @@ export class RegisterDto {
   email!: string;
 
   @IsString()
-  @MinLength(6)
+  @MinLength(8)
   password!: string;
 
-  @IsOptional()
   @IsString()
-  nickname?: string;
+  @MinLength(2)
+  username!: string;
 }
 
 export class LoginDto {
@@ -22,6 +22,7 @@ export class LoginDto {
 }
 
 export class RefreshDto {
+  @IsOptional()
   @IsString()
-  refreshToken!: string;
+  refreshToken?: string;
 }

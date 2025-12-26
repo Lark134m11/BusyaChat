@@ -4,13 +4,16 @@ import { AppModule } from './app.module';
 import * as cookieParser from 'cookie-parser';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { join } from 'path';
+import { mkdirSync } from 'fs';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   const config = app.get(ConfigService);
-  const port = Number(config.get<string>('BACKEND_PORT') ?? '4000');
-  const corsOrigin = config.get<string>('CORS_ORIGIN') ?? 'http://localhost:5173';
+  const port = Number(config.get<string>('PORT') ?? '4000');
+  const corsOrigin = config.get<string>('CLIENT_URL') ?? 'http://127.0.0.1:5173';
 
   app.use(cookieParser());
   app.enableCors({
@@ -25,6 +28,10 @@ async function bootstrap() {
       forbidUnknownValues: true,
     }),
   );
+
+  const uploadsDir = join(process.cwd(), 'uploads');
+  mkdirSync(uploadsDir, { recursive: true });
+  app.useStaticAssets(uploadsDir, { prefix: '/uploads' });
 
   await app.listen(port);
   // eslint-disable-next-line no-console

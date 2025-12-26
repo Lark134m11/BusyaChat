@@ -9,10 +9,10 @@ type AuthState = {
   loading: boolean;
 
   setTokens: (a: string, r: string) => void;
-  logout: () => void;
+  logout: () => Promise<void>;
   initMe: () => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, nickname?: string) => Promise<void>;
+  register: (email: string, password: string, username: string) => Promise<void>;
 };
 
 export const useAuth = create<AuthState>((set, get) => ({
@@ -28,7 +28,15 @@ export const useAuth = create<AuthState>((set, get) => ({
     set({ accessToken: a, refreshToken: r });
   },
 
-  logout: () => {
+  logout: async () => {
+    const { accessToken } = get();
+    if (accessToken) {
+      try {
+        await http.logout(accessToken);
+      } catch {
+        // ignore
+      }
+    }
     localStorage.removeItem('busya_access');
     localStorage.removeItem('busya_refresh');
     set({ accessToken: null, refreshToken: null, me: null });
@@ -67,10 +75,10 @@ export const useAuth = create<AuthState>((set, get) => ({
     }
   },
 
-  register: async (email, password, nickname) => {
+  register: async (email, password, username) => {
     set({ loading: true, error: null });
     try {
-      const r = await http.register(email, password, nickname);
+      const r = await http.register(email, password, username);
       get().setTokens(r.accessToken, r.refreshToken);
       set({ me: r.user, loading: false });
     } catch (e: any) {

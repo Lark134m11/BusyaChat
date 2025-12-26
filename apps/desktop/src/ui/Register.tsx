@@ -4,7 +4,7 @@ import { BusyaBadge, BusyaButton, BusyaInput } from './Cute';
 
 export function Register({ onSwitch }: { onSwitch: () => void }) {
   const auth = useAuth();
-  const [nickname, setNickname] = useState('Busya');
+  const [username, setUsername] = useState('Busya');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
@@ -13,16 +13,16 @@ export function Register({ onSwitch }: { onSwitch: () => void }) {
       <div className="w-full max-w-md rounded-busya bg-busya-card/60 p-6 shadow-busya ring-1 ring-white/10">
         <div className="flex items-center justify-between mb-4">
           <div className="text-xl font-extrabold text-white">BusyaChat</div>
-          <BusyaBadge text="регистрируемся лапками 🐾" />
+          <BusyaBadge text="register softly" />
         </div>
 
         <div className="space-y-3">
-          <BusyaInput value={nickname} onChange={(e) => setNickname(e.target.value)} placeholder="ник" />
+          <BusyaInput value={username} onChange={(e) => setUsername(e.target.value)} placeholder="username" />
           <BusyaInput value={email} onChange={(e) => setEmail(e.target.value)} placeholder="email" />
           <BusyaInput
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="пароль (6+)"
+            placeholder="password (8+)"
             type="password"
           />
 
@@ -30,14 +30,14 @@ export function Register({ onSwitch }: { onSwitch: () => void }) {
 
           <BusyaButton
             disabled={auth.loading}
-            onClick={() => auth.register(email, password, nickname)}
+            onClick={() => auth.register(email, password, username)}
             className="w-full"
           >
-            {auth.loading ? 'Буся создаёт аккаунт…' : 'Создать аккаунт'}
+            {auth.loading ? 'creating account...' : 'Create account'}
           </BusyaButton>
 
           <button className="text-sm text-white/60 hover:text-white" onClick={onSwitch}>
-            Уже есть аккаунт? Войти 🐶
+            Have an account? Sign in
           </button>
         </div>
       </div>

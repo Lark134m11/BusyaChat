@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Patch, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Patch, Query, UseGuards } from '@nestjs/common';
 import { JwtGuard } from '../common/auth/jwt.guard';
 import { CurrentUser } from '../common/auth/current-user.decorator';
 import { UsersService } from './users.service';
@@ -7,11 +7,7 @@ import { IsOptional, IsString } from 'class-validator';
 class UpdateMeDto {
   @IsOptional()
   @IsString()
-  nickname?: string;
-
-  @IsOptional()
-  @IsString()
-  about?: string;
+  username?: string;
 
   @IsOptional()
   @IsString()
@@ -35,5 +31,10 @@ export class UsersController {
   @Patch('me')
   async updateMe(@CurrentUser() user: any, @Body() dto: UpdateMeDto) {
     return this.users.updateMe(user.sub, dto);
+  }
+
+  @Get('search')
+  async search(@Query('query') query?: string) {
+    return this.users.searchUsers(query ?? '');
   }
 }

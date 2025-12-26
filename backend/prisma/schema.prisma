@@ -7,42 +7,51 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
 enum ChannelType {
   TEXT
   VOICE
-  STAGE
 }
 
 enum PresenceStatus {
   ONLINE
   IDLE
-  DND
-  INVISIBLE
+  OFFLINE
+}
+
+enum ServerRole {
+  OWNER
+  ADMIN
+  MOD
+  MEMBER
 }
 
 model User {
-  id           String         @id @default(cuid())
+  id           String         @id @default(uuid())
   email        String         @unique
   passwordHash String
-  nickname     String         @default("Busya")
-  about        String         @default("")
+  username     String
   avatarUrl    String         @default("")
   status       PresenceStatus @default(ONLINE)
   createdAt    DateTime       @default(now())
-  verifiedAt   DateTime?
+  updatedAt    DateTime       @updatedAt
 
-  refreshTokens RefreshToken[]
-  serverMembers ServerMember[]
-  messages      Message[]
-  ownedServers  Server[]       @relation("ServerOwner")
+  refreshTokens   RefreshToken[]
+  memberships     ServerMember[]
+  messages        Message[]
+  directMembers   DirectMember[]
+  directMessages  DirectMessage[]
+  messageReactions MessageReaction[]
+  directReactions  DirectMessageReaction[]
+  uploads         Attachment[]
+  ownedServers    Server[]     @relation("ServerOwner")
+  bansCreated     ServerBan[]  @relation("BanCreatedBy")
 }
 
 model RefreshToken {
-  id        String    @id @default(cuid())
+  id        String   @id @default(uuid())
   userId    String
   tokenHash String
-  createdAt DateTime  @default(now())
+  createdAt DateTime @default(now())
   expiresAt DateTime
   revokedAt DateTime?
 
@@ -52,24 +61,27 @@ model RefreshToken {
 }
 
 model Server {
-  id        String   @id @default(cuid())
+  id        String   @id @default(uuid())
   name      String
   iconUrl   String   @default("")
   ownerId   String
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  owner User @relation("ServerOwner", fields: [ownerId], references: [id], onDelete: Restrict)
-
-  members  ServerMember[]
+  owner   User           @relation("ServerOwner", fields: [ownerId], references: [id], onDelete: Restrict)
+  members ServerMember[]
   channels Channel[]
+  invites  Invite[]
+  bans     ServerBan[]
 }
 
 model ServerMember {
-  id       String   @id @default(cuid())
-  serverId String
-  userId   String
-  nickname String?
-  joinedAt DateTime @default(now())
+  id           String     @id @default(uuid())
+  serverId     String
+  userId       String
+  role         ServerRole @default(MEMBER)
+  joinedAt     DateTime   @default(now())
+  lastActiveAt DateTime?
 
   server Server @relation(fields: [serverId], references: [id], onDelete: Cascade)
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -78,32 +90,181 @@ model ServerMember {
   @@index([userId])
 }
 
+model ServerBan {
+  id          String   @id @default(uuid())
+  serverId    String
+  userId      String
+  createdById String
+  reason      String   @default("")
+  createdAt   DateTime @default(now())
+  expiresAt   DateTime?
+
+  server    Server @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdBy User   @relation("BanCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+
+  @@unique([serverId, userId])
+  @@index([serverId])
+}
+
 model Channel {
-  id        String      @id @default(cuid())
+  id        String     @id @default(uuid())
   serverId  String
   type      ChannelType @default(TEXT)
   name      String
-  position  Int         @default(0)
-  createdAt DateTime    @default(now())
+  minRole   ServerRole @default(MEMBER)
+  position  Int        @default(0)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
 
-  server   Server    @relation(fields: [serverId], references: [id], onDelete: Cascade)
-  messages Message[]
+  server     Server             @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  messages   Message[]
+  readStates ChannelReadState[]
 
   @@index([serverId])
 }
 
 model Message {
-  id        String    @id @default(cuid())
+  id        String   @id @default(uuid())
   channelId String
   authorId  String
   content   String
-  createdAt DateTime  @default(now())
-  updatedAt DateTime?
-  replyToId String?
+  createdAt DateTime @default(now())
+  editedAt  DateTime?
   deletedAt DateTime?
 
-  channel Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
-  author  User    @relation(fields: [authorId], references: [id], onDelete: Restrict)
+  channel     Channel           @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  author      User              @relation(fields: [authorId], references: [id], onDelete: Restrict)
+  reactions   MessageReaction[]
+  attachments Attachment[]
 
   @@index([channelId, createdAt])
+}
+
+model MessageReaction {
+  id        String   @id @default(uuid())
+  messageId String
+  userId    String
+  emoji     String
+  createdAt DateTime @default(now())
+
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId, emoji])
+  @@index([messageId])
+}
+
+model Invite {
+  id          String   @id @default(uuid())
+  serverId    String
+  code        String   @unique
+  createdById String
+  maxUses     Int?
+  uses        Int      @default(0)
+  expiresAt   DateTime?
+  revoked     Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  server    Server @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  createdBy User   @relation(fields: [createdById], references: [id], onDelete: Restrict)
+
+  @@index([serverId])
+}
+
+model ChannelReadState {
+  id                String   @id @default(uuid())
+  channelId         String
+  userId            String
+  lastReadMessageId String?
+  lastReadAt        DateTime?
+
+  channel Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([channelId, userId])
+}
+
+model DirectThread {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
+  members    DirectMember[]
+  messages   DirectMessage[]
+  readStates DirectReadState[]
+}
+
+model DirectMember {
+  id       String   @id @default(uuid())
+  threadId String
+  userId   String
+  joinedAt DateTime @default(now())
+
+  thread DirectThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  user   User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([threadId, userId])
+  @@index([userId])
+}
+
+model DirectMessage {
+  id        String   @id @default(uuid())
+  threadId  String
+  authorId  String
+  content   String
+  createdAt DateTime @default(now())
+  editedAt  DateTime?
+  deletedAt DateTime?
+
+  thread      DirectThread          @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  author      User                  @relation(fields: [authorId], references: [id], onDelete: Restrict)
+  reactions   DirectMessageReaction[]
+  attachments Attachment[]
+
+  @@index([threadId, createdAt])
+}
+
+model DirectMessageReaction {
+  id              String   @id @default(uuid())
+  directMessageId String
+  userId          String
+  emoji           String
+  createdAt       DateTime @default(now())
+
+  directMessage DirectMessage @relation(fields: [directMessageId], references: [id], onDelete: Cascade)
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([directMessageId, userId, emoji])
+  @@index([directMessageId])
+}
+
+model DirectReadState {
+  id                String   @id @default(uuid())
+  threadId          String
+  userId            String
+  lastReadMessageId String?
+  lastReadAt        DateTime?
+
+  thread DirectThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  user   User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([threadId, userId])
+}
+
+model Attachment {
+  id              String   @id @default(uuid())
+  uploaderId      String
+  messageId       String?
+  directMessageId String?
+  url             String
+  filename        String
+  mimeType        String
+  size            Int
+  createdAt       DateTime @default(now())
+
+  uploader      User          @relation(fields: [uploaderId], references: [id], onDelete: Cascade)
+  message       Message?      @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  directMessage DirectMessage? @relation(fields: [directMessageId], references: [id], onDelete: Cascade)
+
+  @@index([uploaderId])
 }

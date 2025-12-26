@@ -20,10 +20,13 @@ export function App() {
       chat.disconnectWs();
       return;
     }
-    chat.connectWs(auth.accessToken);
+    if (auth.me?.id) {
+      chat.connectWs(auth.accessToken, auth.me.id);
+    }
     chat.loadServers(auth.accessToken);
+    chat.loadDirectThreads(auth.accessToken);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [auth.accessToken]);
+  }, [auth.accessToken, auth.me?.id]);
 
   if (!auth.accessToken) {
     return mode === 'login' ? (

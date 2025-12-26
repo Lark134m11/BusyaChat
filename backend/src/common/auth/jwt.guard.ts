@@ -17,7 +17,11 @@ export class JwtGuard implements CanActivate {
     const token = auth.slice(7);
 
     try {
-      (req as any).user = this.jwt.verify(token);
+      const payload = this.jwt.verify(token);
+      if (payload?.typ && payload.typ !== 'access') {
+        throw new UnauthorizedException('Invalid token');
+      }
+      (req as any).user = payload;
       return true;
     } catch {
       throw new UnauthorizedException('Bad token');

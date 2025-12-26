@@ -3,7 +3,7 @@ import React from 'react';
 export function BusyaBadge({ text }: { text: string }) {
   return (
     <span className="inline-flex items-center gap-2 rounded-full bg-busya-card/70 px-3 py-1 text-xs text-white/80 shadow-busyaSoft">
-      <span className="text-busya-pink">🐾</span>
+      <span className="text-busya-pink">*</span>
       <span>{text}</span>
     </span>
   );

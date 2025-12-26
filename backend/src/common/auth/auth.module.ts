@@ -18,7 +18,7 @@ import { WsJwtGuard } from './ws-jwt.guard';
     JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: (cfg: ConfigService) => ({
-        secret: cfg.get<string>('JWT_SECRET') || 'dev_secret_change_me',
+        secret: cfg.get<string>('JWT_ACCESS_SECRET') || cfg.get<string>('JWT_SECRET') || 'dev_secret_change_me',
         signOptions: { expiresIn: '7d' },
       }),
     }),

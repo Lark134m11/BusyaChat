@@ -8,6 +8,9 @@ import { ServersModule } from './servers/servers.module';
 import { ChannelsModule } from './channels/channels.module';
 import { MessagesModule } from './messages/messages.module';
 import { RealtimeModule } from './realtime/realtime.module';
+import { InvitesModule } from './invites/invites.module';
+import { DirectModule } from './direct/direct.module';
+import { UploadsModule } from './uploads/uploads.module';
 
 @Module({
   imports: [
@@ -25,6 +28,9 @@ import { RealtimeModule } from './realtime/realtime.module';
     ChannelsModule,
     MessagesModule,
     RealtimeModule,
+    InvitesModule,
+    DirectModule,
+    UploadsModule,
   ],
 })
 export class AppModule {}
