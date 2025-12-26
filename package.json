@@ -4,7 +4,7 @@
   "packageManager": "pnpm@9.12.3",
   "workspaces": ["apps/*"],
   "scripts": {
-    "dev:backend": "pnpm -C apps/backend dev",
+    "dev:backend": "pnpm -C backend dev",
     "dev:desktop": "pnpm -C apps/desktop dev",
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",
