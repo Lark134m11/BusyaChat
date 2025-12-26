@@ -49,7 +49,7 @@ export function Servers() {
         })}
       </div>
 
-      <div className="mt-auto text-[11px] text-white/40 px-2 text-center">BusyaDock v2</div>
+      <div className="mt-auto text-[11px] text-white/40 px-2 text-center">BusyaDock v3</div>
     </div>
   );
 }

@@ -16,7 +16,7 @@ export function Register({ onSwitch }: { onSwitch: () => void }) {
     <div className="h-full flex items-center justify-center p-8">
       <div className="w-full max-w-md rounded-busya bg-busya-card/60 p-6 shadow-busya ring-1 ring-white/10">
         <div className="flex items-center justify-between mb-4">
-          <div className="text-xl font-extrabold text-white">{t(locale, 'app.name')}</div>
+          <div className="text-2xl font-extrabold text-white busya-title">{t(locale, 'app.name')}</div>
           <div className="flex items-center gap-2">
             <BusyaBadge text={t(locale, 'badge.register')} />
             <LanguageSwitch />

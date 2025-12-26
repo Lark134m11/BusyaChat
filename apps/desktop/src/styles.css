@@ -1,14 +1,62 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Space+Grotesk:wght@300;400;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
   color-scheme: dark;
+  --busya-pink: 255 182 201;
+  --busya-cream: 255 243 230;
+  --busya-cocoa: 91 58 46;
+  --busya-sky: 191 231 255;
+  --busya-mint: 191 247 210;
+  --busya-night: 30 31 42;
+  --busya-card: 37 38 58;
+  --busya-glow: 255 182 201;
+  --busya-text: 240 241 255;
+  --busya-subtle: 145 150 180;
+}
+
+[data-theme="dawn"] {
+  --busya-pink: 255 143 181;
+  --busya-cream: 255 240 230;
+  --busya-cocoa: 120 78 58;
+  --busya-sky: 150 205 255;
+  --busya-mint: 145 240 200;
+  --busya-night: 38 30 32;
+  --busya-card: 56 46 50;
+  --busya-glow: 255 143 181;
+  --busya-text: 245 236 232;
+  --busya-subtle: 170 155 150;
+}
+
+[data-theme="pulse"] {
+  --busya-pink: 246 98 255;
+  --busya-cream: 255 248 240;
+  --busya-cocoa: 63 50 115;
+  --busya-sky: 90 210 255;
+  --busya-mint: 80 255 201;
+  --busya-night: 16 16 28;
+  --busya-card: 28 29 48;
+  --busya-glow: 80 255 201;
+  --busya-text: 236 240 255;
+  --busya-subtle: 130 140 170;
 }
 
 html, body, #root {
   height: 100%;
-  background: #1E1F2A;
+  background: rgb(var(--busya-night));
+}
+
+body {
+  font-family: 'Space Grotesk', 'Segoe UI', sans-serif;
+  color: rgb(var(--busya-text));
+  background:
+    radial-gradient(1200px 800px at 20% -10%, rgba(var(--busya-glow), 0.18), transparent 60%),
+    radial-gradient(800px 500px at 90% 10%, rgba(var(--busya-sky), 0.14), transparent 50%),
+    radial-gradient(700px 600px at 30% 80%, rgba(var(--busya-mint), 0.12), transparent 50%),
+    rgb(var(--busya-night));
 }
 
 * {
@@ -16,13 +64,18 @@ html, body, #root {
   -moz-osx-font-smoothing: grayscale;
 }
 
+.busya-title {
+  font-family: 'DM Serif Display', 'Georgia', serif;
+  letter-spacing: 0.3px;
+}
+
 .busya-scroll::-webkit-scrollbar {
   width: 10px;
 }
 .busya-scroll::-webkit-scrollbar-thumb {
-  background: rgba(255, 182, 201, 0.25);
+  background: rgba(var(--busya-pink), 0.25);
   border-radius: 999px;
 }
 .busya-scroll::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(255, 255, 255, 0.05);
 }

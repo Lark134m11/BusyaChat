@@ -6,13 +6,13 @@ export default {
     extend: {
       colors: {
         busya: {
-          pink: '#FFB6C9',
-          cream: '#FFF3E6',
-          cocoa: '#5B3A2E',
-          sky: '#BFE7FF',
-          mint: '#BFF7D2',
-          night: '#1E1F2A',
-          card: '#25263A'
+          pink: 'rgb(var(--busya-pink) / <alpha-value>)',
+          cream: 'rgb(var(--busya-cream) / <alpha-value>)',
+          cocoa: 'rgb(var(--busya-cocoa) / <alpha-value>)',
+          sky: 'rgb(var(--busya-sky) / <alpha-value>)',
+          mint: 'rgb(var(--busya-mint) / <alpha-value>)',
+          night: 'rgb(var(--busya-night) / <alpha-value>)',
+          card: 'rgb(var(--busya-card) / <alpha-value>)'
         }
       },
       borderRadius: {

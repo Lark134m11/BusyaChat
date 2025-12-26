@@ -10,6 +10,7 @@ import { Members } from './Members';
 import { ServerSettings } from './ServerSettings';
 import { BusyaBadge, BusyaButton, BusyaInput } from './Cute';
 import { LanguageSwitch } from './LanguageSwitch';
+import { AppSettings } from './AppSettings';
 
 export function Layout() {
   const auth = useAuth();
@@ -18,6 +19,7 @@ export function Layout() {
   const [serverName, setServerName] = useState('');
   const [inviteCode, setInviteCode] = useState('');
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [appSettingsOpen, setAppSettingsOpen] = useState(false);
 
   const title = useMemo(() => {
     if (chat.view === 'direct') return 'Directs';
@@ -32,11 +34,11 @@ export function Layout() {
 
   return (
     <div className="h-full w-full bg-busya-night text-white">
-      <div className="h-full grid grid-cols-[76px_280px_1fr_240px]">
+      <div className="h-full grid grid-cols-1 md:grid-cols-[76px_260px_1fr] xl:grid-cols-[76px_280px_1fr_240px]">
         <Servers />
         <div className="border-r border-white/10 flex flex-col">
           <div className="p-3 border-b border-white/10 flex items-center justify-between">
-            <div className="font-bold">{title}</div>
+            <div className="text-lg font-bold busya-title">{title}</div>
             {chat.view === 'server' ? (
               <div className="flex items-center gap-2">
                 <LanguageSwitch />
@@ -96,18 +98,30 @@ export function Layout() {
         </div>
 
         <Chat />
-        <Members />
+        <div className="hidden xl:block">
+          <Members />
+        </div>
 
-        <button
-          onClick={() => auth.logout()}
-          className="absolute bottom-3 left-3 rounded-full bg-busya-card/70 px-3 py-2 text-xs text-white/70 hover:text-white ring-1 ring-white/10"
-          title="Logout"
-        >
-          {t(locale, 'layout.logout')}
-        </button>
+        <div className="absolute bottom-3 left-3 flex items-center gap-2">
+          <button
+            onClick={() => setAppSettingsOpen(true)}
+            className="rounded-full bg-busya-card/70 px-3 py-2 text-xs text-white/70 hover:text-white ring-1 ring-white/10"
+            title={t(locale, 'settings.appTitle')}
+          >
+            app
+          </button>
+          <button
+            onClick={() => auth.logout()}
+            className="rounded-full bg-busya-card/70 px-3 py-2 text-xs text-white/70 hover:text-white ring-1 ring-white/10"
+            title="Logout"
+          >
+            {t(locale, 'layout.logout')}
+          </button>
+        </div>
       </div>
 
       <ServerSettings open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+      <AppSettings open={appSettingsOpen} onClose={() => setAppSettingsOpen(false)} />
     </div>
   );
 }

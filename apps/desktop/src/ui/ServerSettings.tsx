@@ -47,7 +47,7 @@ export function ServerSettings({ open, onClose }: { open: boolean; onClose: () =
           </button>
         </div>
 
-        <div className="grid grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-4">
             <div>
               <div className="text-xs text-white/50 mb-1">{t(locale, 'settings.renameTitle')}</div>

@@ -17,6 +17,8 @@ export function Channels() {
 
   const [userQuery, setUserQuery] = useState('');
   const [userResults, setUserResults] = useState<any[]>([]);
+  const [userError, setUserError] = useState<string | null>(null);
+  const [userLoading, setUserLoading] = useState(false);
 
   const unreadMap = useMemo(() => {
     const map: Record<string, boolean> = {};
@@ -40,14 +42,31 @@ export function Channels() {
             onChange={async (e) => {
               const v = e.target.value;
               setUserQuery(v);
+              setUserError(null);
               if (!auth.accessToken || v.trim().length < 2) {
                 setUserResults([]);
                 return;
               }
-              const users = await http.searchUsers(auth.accessToken, v.trim());
-              setUserResults(users);
+              setUserLoading(true);
+              try {
+                const users = await http.searchUsers(auth.accessToken, v.trim());
+                setUserResults(users);
+              } catch {
+                setUserError(t(locale, 'channels.searchError'));
+                setUserResults([]);
+              } finally {
+                setUserLoading(false);
+              }
             }}
           />
+          {!userLoading && userQuery.trim().length > 0 && userQuery.trim().length < 2 && (
+            <div className="text-xs text-white/50">{t(locale, 'channels.minChars')}</div>
+          )}
+          {userLoading && <div className="text-xs text-white/50">{t(locale, 'channels.loading')}</div>}
+          {!userLoading && userQuery.trim().length >= 2 && userResults.length === 0 && !userError && (
+            <div className="text-xs text-white/50">{t(locale, 'channels.noResults')}</div>
+          )}
+          {userError && <div className="text-xs text-busya-pink">{userError}</div>}
           {userResults.length > 0 && (
             <div className="rounded-busya bg-busya-card/60 ring-1 ring-white/10 p-2 space-y-1">
               {userResults.map((u) => (

@@ -61,6 +61,16 @@ type VoiceState = {
   participants: string[];
   stream: MediaStream | null;
   peers: Record<string, RTCPeerConnection>;
+  muted: boolean;
+  deafened: boolean;
+  inputDeviceId: string | null;
+  outputDeviceId: string | null;
+};
+
+type DeviceState = {
+  inputs: MediaDeviceInfo[];
+  outputs: MediaDeviceInfo[];
+  hasPermission: boolean;
 };
 
 type ChatState = {
@@ -86,6 +96,7 @@ type ChatState = {
   directSearchResults: Message[];
 
   voice: VoiceState;
+  devices: DeviceState;
 
   setSelf: (userId: string) => void;
   loadServers: (accessToken: string) => Promise<void>;
@@ -138,6 +149,12 @@ type ChatState = {
 
   joinVoice: (channelId: string) => Promise<void>;
   leaveVoice: () => Promise<void>;
+  toggleMute: () => void;
+  toggleDeafen: () => void;
+  refreshDevices: () => Promise<void>;
+  requestMicAccess: () => Promise<void>;
+  setVoiceInput: (deviceId: string | null) => Promise<void>;
+  setVoiceOutput: (deviceId: string | null) => void;
 
   createPeerConnection: (peerId: string, channelId: string, isInitiator: boolean) => RTCPeerConnection;
 
@@ -169,7 +186,17 @@ export const useChat = create<ChatState>((set, get) => ({
   searchResults: [],
   directSearchResults: [],
 
-  voice: { channelId: null, participants: [], stream: null, peers: {} },
+  voice: {
+    channelId: null,
+    participants: [],
+    stream: null,
+    peers: {},
+    muted: false,
+    deafened: false,
+    inputDeviceId: localStorage.getItem('busya_mic') || null,
+    outputDeviceId: localStorage.getItem('busya_speaker') || null,
+  },
+  devices: { inputs: [], outputs: [], hasPermission: false },
 
   setSelf: (userId) => set({ selfId: userId }),
 
@@ -411,7 +438,10 @@ export const useChat = create<ChatState>((set, get) => ({
 
     let stream: MediaStream;
     try {
-      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const deviceId = get().voice.inputDeviceId;
+      stream = await navigator.mediaDevices.getUserMedia({
+        audio: deviceId ? { deviceId: { exact: deviceId } } : true,
+      });
     } catch {
       return;
     }
@@ -421,8 +451,13 @@ export const useChat = create<ChatState>((set, get) => ({
     if (!response.ok) return;
 
     const participants = (response.users ?? []).filter((id) => id && id !== selfId);
+    const muted = get().voice.muted;
+    stream.getAudioTracks().forEach((t) => {
+      t.enabled = !muted;
+    });
     set({
       voice: {
+        ...get().voice,
         channelId,
         participants,
         stream,
@@ -443,7 +478,77 @@ export const useChat = create<ChatState>((set, get) => ({
     socket.emit('voice.leave', { channelId: voice.channelId });
     Object.values(voice.peers).forEach((pc) => pc.close());
     voice.stream?.getTracks().forEach((t) => t.stop());
-    set({ voice: { channelId: null, participants: [], stream: null, peers: {} } });
+    set({
+      voice: {
+        ...get().voice,
+        channelId: null,
+        participants: [],
+        stream: null,
+        peers: {},
+      },
+    });
+  },
+
+  toggleMute: () => {
+    const voice = get().voice;
+    const next = !voice.muted;
+    voice.stream?.getAudioTracks().forEach((t) => {
+      t.enabled = !next;
+    });
+    set({ voice: { ...voice, muted: next } });
+  },
+
+  toggleDeafen: () => {
+    const voice = get().voice;
+    set({ voice: { ...voice, deafened: !voice.deafened } });
+  },
+
+  refreshDevices: async () => {
+    if (!navigator.mediaDevices?.enumerateDevices) return;
+    const list = await navigator.mediaDevices.enumerateDevices();
+    const inputs = list.filter((d) => d.kind === 'audioinput');
+    const outputs = list.filter((d) => d.kind === 'audiooutput');
+    const hasPermission = inputs.some((d) => d.label);
+    set({ devices: { inputs, outputs, hasPermission } });
+  },
+
+  requestMicAccess: async () => {
+    if (!navigator.mediaDevices?.getUserMedia) return;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stream.getTracks().forEach((t) => t.stop());
+      await get().refreshDevices();
+    } catch {
+      // ignore
+    }
+  },
+
+  setVoiceInput: async (deviceId) => {
+    const voice = get().voice;
+    localStorage.setItem('busya_mic', deviceId ?? '');
+    set({ voice: { ...voice, inputDeviceId: deviceId } });
+    if (!voice.channelId) return;
+    if (!navigator.mediaDevices?.getUserMedia) return;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: deviceId ? { deviceId: { exact: deviceId } } : true,
+      });
+      const track = stream.getAudioTracks()[0];
+      if (track) track.enabled = !voice.muted;
+      voice.stream?.getTracks().forEach((t) => t.stop());
+      Object.values(voice.peers).forEach((pc) => {
+        const sender = pc.getSenders().find((s) => s.track && s.track.kind === 'audio');
+        if (sender && track) sender.replaceTrack(track);
+      });
+      set({ voice: { ...get().voice, stream } });
+    } catch {
+      // ignore
+    }
+  },
+
+  setVoiceOutput: (deviceId) => {
+    localStorage.setItem('busya_speaker', deviceId ?? '');
+    set({ voice: { ...get().voice, outputDeviceId: deviceId } });
   },
 
   connectWs: (accessToken, userId) => {
@@ -687,6 +792,11 @@ export const useChat = create<ChatState>((set, get) => ({
       const audio = document.getElementById(`voice-audio-${peerId}`) as HTMLAudioElement | null;
       if (audio) {
         audio.srcObject = event.streams[0];
+        const outputId = get().voice.outputDeviceId;
+        if (outputId && typeof (audio as any).setSinkId === 'function') {
+          (audio as any).setSinkId(outputId).catch(() => undefined);
+        }
+        audio.muted = get().voice.deafened;
         audio.play().catch(() => undefined);
       }
     };

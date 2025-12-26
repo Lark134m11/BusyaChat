@@ -79,6 +79,24 @@ export function Chat() {
     }
   }, [chat.activeChannelId, chat.voice.channelId, chat.leaveVoice]);
 
+  useEffect(() => {
+    chat.voice.participants.forEach((id) => {
+      const audio = document.getElementById(`voice-audio-${id}`) as HTMLAudioElement | null;
+      if (audio) audio.muted = chat.voice.deafened;
+    });
+  }, [chat.voice.deafened, chat.voice.participants]);
+
+  useEffect(() => {
+    const outputId = chat.voice.outputDeviceId;
+    if (!outputId) return;
+    chat.voice.participants.forEach((id) => {
+      const audio = document.getElementById(`voice-audio-${id}`) as HTMLAudioElement | null;
+      if (audio && typeof (audio as any).setSinkId === 'function') {
+        (audio as any).setSinkId(outputId).catch(() => undefined);
+      }
+    });
+  }, [chat.voice.outputDeviceId, chat.voice.participants]);
+
   const handleScroll = () => {
     if (!listRef.current) return;
     const { scrollTop, scrollHeight, clientHeight } = listRef.current;
@@ -126,7 +144,7 @@ export function Chat() {
   return (
     <div className="flex flex-col h-full">
       <div className="border-b border-white/10 p-3 flex items-center justify-between gap-2">
-        <div className="font-bold">
+        <div className="text-base font-bold">
           {isDirect
             ? t(locale, 'chat.directTitle')
             : activeChannel
@@ -151,12 +169,30 @@ export function Chat() {
           </button>
         </div>
         {!isDirect && activeChannel?.type === 'VOICE' && (
-          <button
-            className="rounded-busya px-3 py-2 bg-busya-pink text-busya-night text-xs font-bold"
-            onClick={() => (voiceActive ? chat.leaveVoice() : chat.joinVoice(activeChannel.id))}
-          >
-            {voiceActive ? t(locale, 'chat.leaveVoice') : t(locale, 'chat.joinVoice')}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              className="rounded-busya px-3 py-2 bg-busya-pink text-busya-night text-xs font-bold"
+              onClick={() => (voiceActive ? chat.leaveVoice() : chat.joinVoice(activeChannel.id))}
+            >
+              {voiceActive ? t(locale, 'chat.leaveVoice') : t(locale, 'chat.joinVoice')}
+            </button>
+            {voiceActive && (
+              <>
+                <button
+                  className="rounded-busya px-3 py-2 bg-busya-card/80 text-xs ring-1 ring-white/10"
+                  onClick={() => chat.toggleMute()}
+                >
+                  {chat.voice.muted ? t(locale, 'chat.micOff') : t(locale, 'chat.micOn')}
+                </button>
+                <button
+                  className="rounded-busya px-3 py-2 bg-busya-card/80 text-xs ring-1 ring-white/10"
+                  onClick={() => chat.toggleDeafen()}
+                >
+                  {chat.voice.deafened ? t(locale, 'chat.deafenOff') : t(locale, 'chat.deafenOn')}
+                </button>
+              </>
+            )}
+          </div>
         )}
       </div>
 
@@ -206,12 +242,20 @@ export function Chat() {
           <div className="text-white/60">{t(locale, 'chat.noMessages')}</div>
         )}
 
-        {messages.map((m) => (
-          <div key={m.id} className="flex gap-3">
-            <div className="w-10 h-10 rounded-full bg-busya-card/70 ring-1 ring-white/10 flex items-center justify-center">
-              <span>{m.author?.username?.slice(0, 2).toUpperCase() ?? 'U'}</span>
-            </div>
-            <div className="flex-1 space-y-1">
+        {messages.map((m) => {
+          const isSelf = m.author?.id === auth.me?.id;
+          return (
+            <div
+              key={m.id}
+              className={[
+                'flex gap-3 rounded-busya p-3 border',
+                isSelf ? 'bg-busya-card/70 border-busya-pink/30' : 'bg-busya-card/40 border-white/5',
+              ].join(' ')}
+            >
+              <div className="w-10 h-10 rounded-full bg-busya-card/70 ring-1 ring-white/10 flex items-center justify-center">
+                <span>{m.author?.username?.slice(0, 2).toUpperCase() ?? 'U'}</span>
+              </div>
+              <div className="flex-1 space-y-1">
               <div className="text-sm flex items-center gap-2">
                 <span className="font-bold text-busya-sky">{m.author?.username ?? 'User'}</span>
                 <span className="text-xs text-white/40">
@@ -271,7 +315,7 @@ export function Chat() {
                     else chat.addReaction(auth.accessToken, m.id, emoji);
                   }}
                 >
-                  +react
+                  {t(locale, 'chat.react')}
                 </button>
                 {(m.author?.id === auth.me?.id || canModerate) && (
                   <>
@@ -283,7 +327,7 @@ export function Chat() {
                         else chat.editMessage(auth.accessToken, m.id, next);
                       }}
                     >
-                      edit
+                      {t(locale, 'chat.edit')}
                     </button>
                     <button
                       onClick={() => {
@@ -292,14 +336,15 @@ export function Chat() {
                         else chat.deleteMessage(auth.accessToken, m.id);
                       }}
                     >
-                      delete
+                      {t(locale, 'chat.delete')}
                     </button>
                   </>
                 )}
               </div>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
         <div className="text-xs text-white/40">{typingText}</div>
       </div>
 
