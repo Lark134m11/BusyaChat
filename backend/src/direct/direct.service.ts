@@ -164,7 +164,7 @@ export class DirectService {
         where: { id: { in: attachments.map((a) => a.id) } },
         data: { directMessageId: msg.id },
       });
-      msg = await this.prisma.directMessage.findUnique({
+      const refreshed = await this.prisma.directMessage.findUnique({
         where: { id: msg.id },
         select: {
           id: true,
@@ -178,6 +178,8 @@ export class DirectService {
           attachments: { select: { id: true, url: true, filename: true, mimeType: true, size: true } },
         },
       });
+      if (!refreshed) throw new NotFoundException('Message not found');
+      msg = refreshed;
     }
 
     this.realtime.emitDirectMessageCreated(threadId, msg);

@@ -119,7 +119,7 @@ export class MessagesService {
         where: { id: { in: attachments.map((a) => a.id) } },
         data: { messageId: msg.id },
       });
-      msg = await this.prisma.message.findUnique({
+      const refreshed = await this.prisma.message.findUnique({
         where: { id: msg.id },
         select: {
           id: true,
@@ -133,6 +133,8 @@ export class MessagesService {
           attachments: { select: { id: true, url: true, filename: true, mimeType: true, size: true } },
         },
       });
+      if (!refreshed) throw new NotFoundException('Message not found');
+      msg = refreshed;
     }
 
     // realtime push to channel room

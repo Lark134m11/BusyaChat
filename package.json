@@ -4,8 +4,8 @@
   "version": "0.1.0",
   "main": "apps/desktop/electron/main.cjs",
   "scripts": {
-    "dev": "concurrently -n VITE,ELECTRON -c auto \"vite --config apps/desktop/vite.config.mts --root apps/desktop\" \"wait-on http://127.0.0.1:5173 && electron apps/desktop/electron/main.cjs\"",
-    "dev:desktop": "concurrently -n VITE,ELECTRON -c auto \"vite --config apps/desktop/vite.config.mts --root apps/desktop\" \"wait-on http://127.0.0.1:5173 && electron apps/desktop/electron/main.cjs\"",
+    "dev": "pnpm --dir apps/desktop dev",
+    "dev:desktop": "pnpm --dir apps/desktop dev",
     "dev:backend": "pnpm --dir backend dev",
     "build": "vite build --config apps/desktop/vite.config.mts --root apps/desktop"
   },
