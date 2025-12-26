@@ -1,5 +1,7 @@
 {
   "name": "@busyachat/desktop",
+  "description": "BusyaChat desktop app",
+  "author": "BusyaChat",
   "private": true,
   "version": "0.1.0",
   "main": "electron/main.cjs",
@@ -31,6 +33,7 @@
   "build": {
     "appId": "com.busya.chat",
     "productName": "BusyaChat",
+    "executableName": "BusyaChat",
     "directories": {
       "output": "release"
     },
