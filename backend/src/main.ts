@@ -15,14 +15,19 @@ async function bootstrap() {
   const port = Number(config.get<string>('PORT') ?? '4000');
   const corsOriginRaw =
     config.get<string>('CLIENT_URL') ?? 'http://127.0.0.1:5173,http://localhost:5173';
-  const corsOrigins = corsOriginRaw
-    .split(',')
-    .map((origin) => origin.trim())
-    .filter(Boolean);
+  const corsOrigins = new Set(
+    corsOriginRaw
+      .split(',')
+      .map((origin) => origin.trim())
+      .filter(Boolean),
+  );
+  // Ensure localhost/127.0.0.1 pair are both allowed in dev.
+  if (corsOrigins.has('http://127.0.0.1:5173')) corsOrigins.add('http://localhost:5173');
+  if (corsOrigins.has('http://localhost:5173')) corsOrigins.add('http://127.0.0.1:5173');
 
   app.use(cookieParser());
   app.enableCors({
-    origin: corsOrigins,
+    origin: Array.from(corsOrigins),
     credentials: true,
   });
 
