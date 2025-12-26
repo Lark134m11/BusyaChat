@@ -8,7 +8,7 @@
   "scripts": {
     "dev": "concurrently -n VITE,ELECTRON -c auto \"vite\" \"wait-on http://localhost:5173 && electron electron/main.cjs\"",
     "build": "vite build",
-    "dist": "vite build && electron-builder"
+    "dist": "pnpm --dir ../../backend build && vite build && electron-builder"
   },
   "dependencies": {
     "react": "^18.3.1",
@@ -40,6 +40,28 @@
     "files": [
       "dist/**",
       "electron/**"
+    ],
+    "extraResources": [
+      {
+        "from": "../../backend/dist",
+        "to": "backend/dist"
+      },
+      {
+        "from": "../../backend/node_modules",
+        "to": "backend/node_modules"
+      },
+      {
+        "from": "../../backend/prisma",
+        "to": "backend/prisma"
+      },
+      {
+        "from": "../../backend/.env",
+        "to": "backend/.env"
+      }
+    ],
+    "asarUnpack": [
+      "**/backend/node_modules/**",
+      "**/backend/prisma/**"
     ],
     "asar": true,
     "win": {

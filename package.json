@@ -8,7 +8,7 @@
     "dev:desktop": "pnpm --dir apps/desktop dev",
     "dev:backend": "pnpm --dir backend dev",
     "build": "pnpm --dir apps/desktop build",
-    "dist:desktop": "pnpm --dir apps/desktop dist"
+    "dist:desktop": "pnpm --dir backend build && pnpm --dir apps/desktop dist"
   },
   "dependencies": {
     "react": "^18.3.1",
