@@ -1,6 +1,5 @@
-const { contextBridge } = require("electron");
+const { contextBridge, ipcRenderer } = require("electron");
 
 contextBridge.exposeInMainWorld("busya", {
-  ping: () => "pong",
-  versions: process.versions,
+  ping: () => ipcRenderer.invoke("busya:ping"),
 });
