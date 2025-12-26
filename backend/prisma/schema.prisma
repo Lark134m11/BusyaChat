@@ -1,0 +1,109 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+enum ChannelType {
+  TEXT
+  VOICE
+  STAGE
+}
+
+enum PresenceStatus {
+  ONLINE
+  IDLE
+  DND
+  INVISIBLE
+}
+
+model User {
+  id           String         @id @default(cuid())
+  email        String         @unique
+  passwordHash String
+  nickname     String         @default("Busya")
+  about        String         @default("")
+  avatarUrl    String         @default("")
+  status       PresenceStatus @default(ONLINE)
+  createdAt    DateTime       @default(now())
+  verifiedAt   DateTime?
+
+  refreshTokens RefreshToken[]
+  serverMembers ServerMember[]
+  messages      Message[]
+  ownedServers  Server[]       @relation("ServerOwner")
+}
+
+model RefreshToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String
+  createdAt DateTime  @default(now())
+  expiresAt DateTime
+  revokedAt DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Server {
+  id        String   @id @default(cuid())
+  name      String
+  iconUrl   String   @default("")
+  ownerId   String
+  createdAt DateTime @default(now())
+
+  owner User @relation("ServerOwner", fields: [ownerId], references: [id], onDelete: Restrict)
+
+  members  ServerMember[]
+  channels Channel[]
+}
+
+model ServerMember {
+  id       String   @id @default(cuid())
+  serverId String
+  userId   String
+  nickname String?
+  joinedAt DateTime @default(now())
+
+  server Server @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([serverId, userId])
+  @@index([userId])
+}
+
+model Channel {
+  id        String      @id @default(cuid())
+  serverId  String
+  type      ChannelType @default(TEXT)
+  name      String
+  position  Int         @default(0)
+  createdAt DateTime    @default(now())
+
+  server   Server    @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  messages Message[]
+
+  @@index([serverId])
+}
+
+model Message {
+  id        String    @id @default(cuid())
+  channelId String
+  authorId  String
+  content   String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime?
+  replyToId String?
+  deletedAt DateTime?
+
+  channel Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  author  User    @relation(fields: [authorId], references: [id], onDelete: Restrict)
+
+  @@index([channelId, createdAt])
+}
